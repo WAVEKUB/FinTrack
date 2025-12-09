@@ -12,6 +12,9 @@ backend/main.exe
 backend/.env
 backend/.DS_Store
 
+# --- Database ---
+pgdata/
+
 # --- IDE ---
 .vscode
 .idea
