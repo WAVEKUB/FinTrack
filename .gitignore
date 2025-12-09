@@ -15,6 +15,9 @@ backend/.DS_Store
 # --- Database ---
 pgdata/
 
+# ... existing ignores ...
+.env
+
 # --- IDE ---
 .vscode
 .idea
