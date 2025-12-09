@@ -1,7 +1,20 @@
 package main
 
-import "fmt"
+import (
+	"github.com/WAVEKUB/fintrack-backend/initializers"
+	"github.com/WAVEKUB/fintrack-backend/models"
+)
+
+func init() {
+	initializers.LoadEnvVariables()
+	initializers.ConnectToDB()
+}
 
 func main() {
-	fmt.Println("Backend is ready!")
+	initializers.DB.AutoMigrate(
+		&models.User{},
+		&models.Wallet{},
+		&models.Transaction{},
+		&models.Category{},
+	)
 }
