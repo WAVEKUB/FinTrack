@@ -1,0 +1,17 @@
+# --- Frontend ---
+frontend/node_modules
+frontend/.next
+frontend/.env
+frontend/.env.local
+frontend/.DS_Store
+
+# --- Backend ---
+backend/tmp
+backend/main
+backend/main.exe
+backend/.env
+backend/.DS_Store
+
+# --- IDE ---
+.vscode
+.idea
