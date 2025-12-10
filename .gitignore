@@ -16,7 +16,7 @@ backend/.DS_Store
 pgdata/
 
 # ... existing ignores ...
-.env
+.env*
 
 # --- IDE ---
 .vscode
