@@ -2,17 +2,20 @@ package controllers
 
 import (
 	"net/http"
-	"os"
-	"time"
 
-	"github.com/WAVEKUB/fintrack-backend/initializers"
-	"github.com/WAVEKUB/fintrack-backend/models"
+	"github.com/WAVEKUB/fintrack-backend/services"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 )
 
-func SignUp(c *gin.Context) {
+type UsersController struct {
+	UserService *services.UserService
+}
+
+func NewUsersController(userService *services.UserService) *UsersController {
+	return &UsersController{UserService: userService}
+}
+
+func (uc *UsersController) SignUp(c *gin.Context) {
 
 	// get request body
 	var body struct {
@@ -26,23 +29,9 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	// hash password
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+	// create user via service
+	_, err := uc.UserService.SignUp(body.Email, body.Password, body.Name)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
-	}
-
-	// create user
-	user := models.User{
-		Email:    body.Email,
-		Password: string(hash),
-		Name:     body.Name,
-	}
-
-	// save user
-	result := initializers.DB.Create(&user)
-	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
@@ -51,7 +40,7 @@ func SignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
 
-func Login(c *gin.Context) {
+func (uc *UsersController) Login(c *gin.Context) {
 	// get request body
 	var body struct {
 		Email    string
@@ -62,37 +51,16 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// find user
-	var user models.User
-	initializers.DB.Where("email = ?", body.Email).First(&user)
-	if user.ID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email or password"})
-		return
-	}
-
-	// compare password
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+	// login via service
+	tokenString, err := uc.UserService.Login(body.Email, body.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
-		return
-	}
-
-	// create token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	// sign token
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	// return token
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
+	c.SetCookie("Authorization", tokenString, 3600*24, "", "", false, true)
 
 	// return JSON
 	c.JSON(http.StatusOK, gin.H{
@@ -101,7 +69,7 @@ func Login(c *gin.Context) {
 	})
 }
 
-func UpdateUser(c *gin.Context) {
+func (uc *UsersController) UpdateUser(c *gin.Context) {
 	// get request body
 	var body struct {
 		Email    string
@@ -115,23 +83,9 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	// find user
-	var user models.User
-	result := initializers.DB.Where("email = ?", body.Email).First(&user)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
-		return
-	}
-
-	// update user
-	user.Email = body.Email
-	user.Password = body.Password
-	user.Name = body.Name
-	user.Avatar = body.Avatar
-
-	// save user
-	result = initializers.DB.Save(&user)
-	if result.Error != nil {
+	// update user via service
+	_, err := uc.UserService.UpdateUser(body.Email, body.Password, body.Name, body.Avatar)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
 	}
@@ -140,7 +94,7 @@ func UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully"})
 }
 
-func DeleteUser(c *gin.Context) {
+func (uc *UsersController) DeleteUser(c *gin.Context) {
 	// get request body
 	var body struct {
 		Email string
@@ -151,17 +105,9 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	// find user
-	var user models.User
-	result := initializers.DB.Where("email = ?", body.Email).First(&user)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
-		return
-	}
-
-	// delete user
-	result = initializers.DB.Delete(&user)
-	if result.Error != nil {
+	// delete user via service
+	err := uc.UserService.DeleteUser(body.Email)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
 		return
 	}
@@ -170,11 +116,11 @@ func DeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 
-func Validate(c *gin.Context) {
-	// ดึง User ออกมาจาก Context (ที่ Middleware แปะไว้ให้)
+func (uc *UsersController) Validate(c *gin.Context) {
+	// get user from middleware
 	user, _ := c.Get("user")
 
-	// ส่งข้อมูล User กลับไป (ไม่ส่ง Password นะ)
+	// send user back to client
 	c.JSON(http.StatusOK, gin.H{
 		"message": "I'm logged in!",
 		"user":    user,
