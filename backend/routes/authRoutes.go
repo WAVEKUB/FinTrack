@@ -7,12 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	userService     = services.NewUserService(initializers.DB)
-	usersController = controllers.NewUsersController(userService)
-)
-
 func AuthRoutes(router *gin.Engine) {
+
+	userService := services.NewUserService(initializers.DB)
+	usersController := controllers.NewUsersController(userService)
 
 	authRoutes := router.Group("/auth")
 	{
