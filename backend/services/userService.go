@@ -117,3 +117,14 @@ func (s *UserService) DeleteUser(email string) error {
 
 	return nil
 }
+
+func (s *UserService) Profile(email string) (*models.User, error) {
+	// find user
+	var user models.User
+	result := s.DB.Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		return nil, errors.New("failed to find user")
+	}
+
+	return &user, nil
+}

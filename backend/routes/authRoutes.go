@@ -1,0 +1,26 @@
+package routes
+
+import (
+	"github.com/WAVEKUB/fintrack-backend/controllers"
+	"github.com/WAVEKUB/fintrack-backend/initializers"
+	"github.com/WAVEKUB/fintrack-backend/services"
+	"github.com/gin-gonic/gin"
+)
+
+var (
+	userService     = services.NewUserService(initializers.DB)
+	usersController = controllers.NewUsersController(userService)
+)
+
+func AuthRoutes(router *gin.Engine) {
+
+	authRoutes := router.Group("/auth")
+	{
+		// Sign Up
+		authRoutes.POST("/signup", usersController.SignUp)
+		// Sign In
+		authRoutes.POST("/signin", usersController.Login)
+		// Validate
+		authRoutes.POST("/validate", usersController.Validate)
+	}
+}
