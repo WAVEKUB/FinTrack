@@ -126,3 +126,26 @@ func (uc *UsersController) Validate(c *gin.Context) {
 		"user":    user,
 	})
 }
+
+func (uc *UsersController) Profile(c *gin.Context) {
+	// get request body
+	var body struct {
+		Email string
+	}
+
+	if c.Bind(&body) != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
+		return
+	}
+
+	// get user via service
+	user, err := uc.UserService.Profile(body.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user"})
+		return
+	}
+
+	// return user
+	c.JSON(http.StatusOK, gin.H{"user": user})
+
+}
