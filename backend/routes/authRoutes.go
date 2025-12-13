@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AuthRoutes(router *gin.Engine) {
+func AuthRoutes(router *gin.RouterGroup) {
 
 	userService := services.NewUserService(initializers.DB)
 	usersController := controllers.NewUsersController(userService)
@@ -18,7 +18,5 @@ func AuthRoutes(router *gin.Engine) {
 		authRoutes.POST("/signup", usersController.SignUp)
 		// Sign In
 		authRoutes.POST("/signin", usersController.Login)
-		// Validate
-		authRoutes.POST("/validate", usersController.Validate)
 	}
 }

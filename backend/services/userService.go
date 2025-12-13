@@ -15,10 +15,12 @@ type UserService struct {
 	DB *gorm.DB
 }
 
+// New User Service
 func NewUserService(db *gorm.DB) *UserService {
 	return &UserService{DB: db}
 }
 
+// Sign Up
 func (s *UserService) SignUp(email, password, name string) (*models.User, error) {
 	// hash password
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
@@ -42,6 +44,7 @@ func (s *UserService) SignUp(email, password, name string) (*models.User, error)
 	return &user, nil
 }
 
+// Login
 func (s *UserService) Login(email, password string) (string, error) {
 	// find user
 	var user models.User
@@ -71,6 +74,7 @@ func (s *UserService) Login(email, password string) (string, error) {
 	return tokenString, nil
 }
 
+// Update User
 func (s *UserService) UpdateUser(email, password, name, avatar string) (*models.User, error) {
 	// find user
 	var user models.User
@@ -101,6 +105,7 @@ func (s *UserService) UpdateUser(email, password, name, avatar string) (*models.
 	return &user, nil
 }
 
+// Delete User
 func (s *UserService) DeleteUser(email string) error {
 	// find user
 	var user models.User
@@ -118,6 +123,7 @@ func (s *UserService) DeleteUser(email string) error {
 	return nil
 }
 
+// Profile
 func (s *UserService) Profile(email string) (*models.User, error) {
 	// find user
 	var user models.User

@@ -128,22 +128,8 @@ func (uc *UsersController) Validate(c *gin.Context) {
 }
 
 func (uc *UsersController) Profile(c *gin.Context) {
-	// get request body
-	var body struct {
-		Email string
-	}
-
-	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
-		return
-	}
-
-	// get user via service
-	user, err := uc.UserService.Profile(body.Email)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user"})
-		return
-	}
+	// get user from middleware
+	user, _ := c.Get("user")
 
 	// return user
 	c.JSON(http.StatusOK, gin.H{"user": user})
