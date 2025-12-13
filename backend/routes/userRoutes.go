@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UserRoutes(router *gin.Engine) {
+func UserRoutes(router *gin.RouterGroup) {
 
 	userService := services.NewUserService(initializers.DB)
 	usersController := controllers.NewUsersController(userService)
@@ -16,8 +16,13 @@ func UserRoutes(router *gin.Engine) {
 	userRoutes := router.Group("/user")
 	userRoutes.Use(middleware.RequireAuth)
 	{
+		// Update User
 		userRoutes.PUT("/update", usersController.UpdateUser)
+		// Delete User
 		userRoutes.DELETE("/delete", usersController.DeleteUser)
+		// Get User Profile
 		userRoutes.GET("/profile", usersController.Profile)
+		// Validate
+		userRoutes.GET("/validate", usersController.Validate)
 	}
 }

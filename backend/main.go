@@ -25,8 +25,10 @@ func main() {
 			AllowCredentials: true,
 		}))
 
-	routes.AuthRoutes(r)
-	routes.UserRoutes(r)
+	v1 := r.Group("/api/v1")
+	routes.AuthRoutes(v1)
+	routes.UserRoutes(v1)
+	routes.TransactionRoutes(v1)
 
 	r.Run(":8080")
 
