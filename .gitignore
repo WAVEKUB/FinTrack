@@ -7,16 +7,16 @@ frontend/.DS_Store
 
 # --- Backend ---
 backend/tmp
-backend/main
-backend/main.exe
+backend/*.exe
 backend/.env
 backend/.DS_Store
 
 # --- Database ---
 pgdata/
 
-# ... existing ignores ...
+# --- Environment ---
 .env*
+mise.toml
 
 # --- IDE ---
 .vscode
