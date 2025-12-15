@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/WAVEKUB/fintrack-backend/initializers"
 	"github.com/WAVEKUB/fintrack-backend/routes"
 	"github.com/gin-contrib/cors"
@@ -19,7 +21,7 @@ func main() {
 
 	r.Use(
 		cors.New(cors.Config{
-			AllowOrigins:     []string{"http://localhost:3000"},
+			AllowOrigins:     []string{os.Getenv("CLIENT_ORIGIN")},
 			AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 			AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 			AllowCredentials: true,
@@ -29,7 +31,8 @@ func main() {
 	routes.AuthRoutes(v1)
 	routes.UserRoutes(v1)
 	routes.TransactionRoutes(v1)
+	routes.WalletRoutes(v1)
 
-	r.Run(":8080")
+	r.Run(":" + os.Getenv("PORT"))
 
 }
