@@ -1,8 +1,70 @@
 "use client";
 
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { TransactionTable, Transaction } from "@/components/TransactionTable";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+interface DashboardSummary {
+  total_balance: number;
+  income: number;
+  expense: number;
+}
 
 export default function Home() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [summary, setSummary] = useState<DashboardSummary>({ total_balance: 0, income: 0, expense: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+
+    async function fetchData() {
+      try {
+        // Fetch Transactions
+        const txResponse = await fetch("/api/v1/transactions");
+        if (txResponse.status === 401) {
+          router.push("/auth/signin");
+          return;
+        }
+        if (!txResponse.ok) {
+          throw new Error(`Error: ${txResponse.status}`);
+        }
+        const txData = await txResponse.json();
+        const transactionData = txData.data || [];
+
+        const mappedTransactions: Transaction[] = transactionData.map((t: any) => ({
+          id: t.ID.toString(),
+          date: t.date,
+          description: t.note,
+          category: "Category " + t.category_id,
+          amount: t.amount,
+          type: t.type.toLowerCase(),
+        }));
+
+        setTransactions(mappedTransactions);
+
+        // Fetch Summary
+        const summaryResponse = await fetch("/api/v1/transactions/summary");
+        if (summaryResponse.ok) {
+          const summaryData = await summaryResponse.json();
+          setSummary(summaryData);
+        }
+
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [router]);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -18,9 +80,9 @@ export default function Home() {
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-3">
           {[
-            { label: "Total Balance", value: "$12,345.00" },
-            { label: "Monthly Income", value: "$4,500.00" },
-            { label: "Monthly Expenses", value: "$2,100.00" },
+            { label: "Total Balance", value: formatCurrency(summary.total_balance) },
+            { label: "Monthly Income", value: formatCurrency(summary.income) },
+            { label: "Monthly Expenses", value: formatCurrency(summary.expense) },
           ].map((stat, i) => (
             <div
               key={i}
@@ -36,16 +98,16 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Recent Activity Placeholder */}
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="p-6">
-            <h3 className="text-base font-semibold leading-6 text-zinc-900 dark:text-white">
-              Recent Activity
-            </h3>
-            <div className="mt-4 h-48 rounded-lg bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-400">
-              Chart / List Placeholder
+        {/* Recent Activity */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium leading-6 text-zinc-900 dark:text-white">Recent Activity</h3>
+          {isLoading ? (
+            <div className="h-48 rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950 flex items-center justify-center">
+              <span className="text-zinc-400">Loading transactions...</span>
             </div>
-          </div>
+          ) : (
+            <TransactionTable transactions={transactions} />
+          )}
         </div>
       </div>
     </DashboardLayout>
