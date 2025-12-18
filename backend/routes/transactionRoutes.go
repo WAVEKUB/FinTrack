@@ -12,6 +12,8 @@ func TransactionRoutes(router *gin.RouterGroup) {
 	transaction := router.Group("/transactions")
 	transaction.Use(middleware.RequireAuth)
 	{
+		// Get Summary
+		transaction.GET("/summary", controllers.GetSummary)
 		// Create Transaction
 		transaction.POST("/create", controllers.CreateTransaction)
 		// Get Transactions
@@ -22,5 +24,7 @@ func TransactionRoutes(router *gin.RouterGroup) {
 		transaction.PUT("/:id", controllers.UpdateTransaction)
 		// Delete Transaction
 		transaction.DELETE("/:id", controllers.DeleteTransaction)
+		// Delete Old Transactions
+		transaction.DELETE("/cleanup", controllers.DeleteOldTransactions)
 	}
 }

@@ -42,7 +42,8 @@ func RequireAuth(c *gin.Context) {
 
 		// find User
 		var user models.User
-		initializers.DB.First(&user, claims["sub"])
+		initializers.DB.Preload("Wallets").First(&user, claims["sub"])
+		initializers.DB.Preload("Transactions").First(&user, claims["sub"])
 
 		if user.ID == 0 {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
