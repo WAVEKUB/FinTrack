@@ -48,8 +48,8 @@ func (s *UserService) SignUp(email, password, name string) (*models.User, error)
 func (s *UserService) Login(email, password string) (string, error) {
 	// find user
 	var user models.User
-	s.DB.Where("email = ?", email).First(&user)
-	if user.ID == 0 {
+	result := s.DB.Where("email = ?", email).First(&user)
+	if result.Error != nil {
 		return "", errors.New("invalid email or password")
 	}
 
