@@ -1,9 +1,11 @@
 "use client";
 
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { TransactionTable, Transaction } from "@/components/TransactionTable";
-import { useEffect, useState } from "react";
+import { TransactionTable, Transaction as UiTransaction } from "@/components/TransactionTable";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTransactions, useTransactionSummary } from "@/hooks/useTransactions";
+import { isAxiosError } from "axios";
 
 interface DashboardSummary {
   total_balance: number;
@@ -12,54 +14,29 @@ interface DashboardSummary {
 }
 
 export default function Home() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [summary, setSummary] = useState<DashboardSummary>({ total_balance: 0, income: 0, expense: 0 });
-  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const { data: rawTransactions, error: txError, isLoading: isTxLoading } = useTransactions();
+  const { data: summary = { total_balance: 0, income: 0, expense: 0 }, isLoading: isSummaryLoading } = useTransactionSummary();
 
   useEffect(() => {
-
-    async function fetchData() {
-      try {
-        // Fetch Transactions
-        const txResponse = await fetch("/api/v1/transactions");
-        if (txResponse.status === 401) {
-          router.push("/auth/signin");
-          return;
-        }
-        if (!txResponse.ok) {
-          throw new Error(`Error: ${txResponse.status}`);
-        }
-        const txData = await txResponse.json();
-        const transactionData = txData.data || [];
-
-        const mappedTransactions: Transaction[] = transactionData.map((t: any) => ({
-          id: t.ID.toString(),
-          date: t.date,
-          description: t.note,
-          category: "Category " + t.category_id,
-          amount: t.amount,
-          type: t.type.toLowerCase(),
-        }));
-
-        setTransactions(mappedTransactions);
-
-        // Fetch Summary
-        const summaryResponse = await fetch("/api/v1/transactions/summary");
-        if (summaryResponse.ok) {
-          const summaryData = await summaryResponse.json();
-          setSummary(summaryData);
-        }
-
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setIsLoading(false);
-      }
+    if (isAxiosError(txError) && txError.response?.status === 401) {
+      router.push("/auth/signin");
     }
+  }, [txError, router]);
 
-    fetchData();
-  }, [router]);
+  const transactions: UiTransaction[] = useMemo(() => {
+    if (!rawTransactions) return [];
+    return rawTransactions.map((t) => ({
+      id: t.ID.toString(),
+      date: t.date,
+      description: t.note,
+      category: "Category " + t.category_id,
+      amount: t.amount,
+      type: t.type.toLowerCase() as "income" | "expense",
+    }));
+  }, [rawTransactions]);
+
+  const isLoading = isTxLoading || isSummaryLoading;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);

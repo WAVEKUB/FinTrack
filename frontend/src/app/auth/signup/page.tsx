@@ -2,53 +2,25 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useRegister } from '@/hooks/useAuth';
 
 export default function SignupPage() {
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
+    const { mutate: register, isPending: isLoading } = useRegister();
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
     });
-    const [error, setError] = useState('');
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
-        setError('');
-
-        try {
-            const res = await fetch(`${API_URL}/auth/signup`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    Name: formData.name,
-                    Email: formData.email,
-                    Password: formData.password,
-                }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Something went wrong');
-            }
-
-            // Redirect to signin on success
-            router.push('/auth/signin');
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
+        register({
+            Name: formData.name,
+            Email: formData.email,
+            Password: formData.password,
+        });
     };
 
     return (
@@ -71,11 +43,7 @@ export default function SignupPage() {
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="bg-neutral-900/50 backdrop-blur-sm py-8 px-4 shadow-2xl sm:rounded-xl sm:px-10 border border-neutral-800">
                     <form className="space-y-6" onSubmit={handleSubmit}>
-                        {error && (
-                            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-sm text-red-400 text-center">
-                                {error}
-                            </div>
-                        )}
+
 
                         <div>
                             <label

@@ -2,66 +2,24 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useLogin } from '@/hooks/useAuth';
+import Cookies from 'js-cookie';
 
 export default function SigninPage() {
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
+    const { mutate: login, isPending: isLoading } = useLogin();
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
         password: '',
     });
-    const [error, setError] = useState('');
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
-        setError('');
-
-        try {
-            const res = await fetch(`${API_URL}/auth/signin`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    Email: formData.email,
-                    Password: formData.password,
-                }),
-            });
-
-            const text = await res.text();
-            console.log('Response status:', res.status);
-            console.log('Response body:', text);
-
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (e) {
-                throw new Error(`Server returned non-JSON response: ${text || res.statusText}`);
-            }
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Invalid credentials');
-            }
-
-            // Store token if needed (cookies are handled by browser)
-            if (data.token) {
-                localStorage.setItem('token', data.token);
-            }
-
-            // Redirect to home/dashboard
-            router.push('/');
-            router.refresh(); // Refresh to update server components with new cookie
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
+        login({
+            Email: formData.email,
+            Password: formData.password,
+        });
     };
 
     return (
@@ -84,11 +42,7 @@ export default function SigninPage() {
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="bg-neutral-900/50 backdrop-blur-sm py-8 px-4 shadow-2xl sm:rounded-xl sm:px-10 border border-neutral-800">
                     <form className="space-y-6" onSubmit={handleSubmit}>
-                        {error && (
-                            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-sm text-red-400 text-center">
-                                {error}
-                            </div>
-                        )}
+
 
                         <div>
                             <label

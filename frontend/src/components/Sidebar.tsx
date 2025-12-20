@@ -10,6 +10,7 @@ import {
     Settings,
     LogOut,
 } from "lucide-react";
+import { useLogout } from "@/hooks/useAuth";
 
 const sidebarItems = [
     {
@@ -42,6 +43,7 @@ const sidebarItems = [
 export function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
+    const { mutate: logout } = useLogout();
 
     return (
         <aside className="fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full border-r border-gray-200 bg-white transition-transform sm:translate-x-0 dark:border-zinc-800 dark:bg-zinc-950">
@@ -79,10 +81,7 @@ export function Sidebar() {
                 <div className="mt-auto">
                     <button
                         type="button"
-                        onClick={() => {
-                            document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                            router.push("/auth/signin");
-                        }}
+                        onClick={() => logout()}
                         className="group flex w-full items-center rounded-lg p-2 text-zinc-900 hover:bg-zinc-100 dark:text-white dark:hover:bg-zinc-800"
                     >
                         <LogOut className="h-5 w-5 flex-shrink-0 text-zinc-500 transition duration-75 group-hover:text-zinc-900 dark:text-zinc-400 dark:group-hover:text-white" />

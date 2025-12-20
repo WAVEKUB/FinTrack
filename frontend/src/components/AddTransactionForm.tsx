@@ -2,18 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { ArrowDownIcon, ArrowUpIcon, Loader2 } from "lucide-react";
+import { useWallets } from "@/hooks/useWallets";
+import { useCreateTransaction } from "@/hooks/useTransactions";
 
 interface AddTransactionFormProps {
     onSuccess: () => void;
     onCancel: () => void;
 }
 
-interface Wallet {
-    ID: number;
-    name: string;
-    type: string;
-    balance: number;
-}
+
 
 // Temporary hardcoded categories until API is available
 const CATEGORIES = [
@@ -25,9 +22,9 @@ const CATEGORIES = [
 ];
 
 export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormProps) {
-    const [isLoading, setIsLoading] = useState(false);
+    const { data: wallets = [], isLoading: isLoadingWallets } = useWallets();
+    const createTransaction = useCreateTransaction();
     const [error, setError] = useState("");
-    const [wallets, setWallets] = useState<Wallet[]>([]);
     const [formData, setFormData] = useState({
         type: "expense" as "income" | "expense",
         amount: "",
@@ -38,28 +35,14 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
     });
 
     useEffect(() => {
-        async function fetchWallets() {
-            try {
-                const response = await fetch("/api/v1/wallets");
-                if (response.ok) {
-                    const data = await response.json();
-                    const fetchedWallets = data.data || [];
-                    setWallets(fetchedWallets);
-                    if (fetchedWallets.length > 0) {
-                        setFormData(prev => ({ ...prev, wallet_id: fetchedWallets[0].ID.toString() }));
-                    }
-                }
-            } catch (error) {
-                console.error("Failed to fetch wallets:", error);
-            }
+        if (wallets.length > 0 && !formData.wallet_id) {
+            setFormData(prev => ({ ...prev, wallet_id: wallets[0].ID.toString() }));
         }
-        fetchWallets();
-    }, []);
+    }, [wallets]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
-        setIsLoading(true);
 
         try {
             const payload = {
@@ -69,29 +52,14 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
                 wallet_id: parseInt(formData.wallet_id),
                 note: formData.note,
                 category_id: parseInt(formData.category_id),
-                // Ensure date is in ISO format if needed, but backend likely accepts YYYY-MM-DD
-                // Adjusting to Send proper timestamp if backend expects RFC3339
                 date: new Date(formData.date).toISOString(),
             };
 
-            const response = await fetch("/api/v1/transactions/create", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to create transaction");
-            }
-
+            await createTransaction.mutateAsync(payload);
             onSuccess();
         } catch (err) {
             console.error(err);
             setError("Failed to create transaction. Please try again.");
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -135,7 +103,7 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
                     onChange={(e) => setFormData({ ...formData, wallet_id: e.target.value })}
                     className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
                 >
-                    {wallets.length === 0 && <option value="">Loading wallets...</option>}
+                    {isLoadingWallets && <option value="">Loading wallets...</option>}
                     {wallets.map((wallet) => (
                         <option key={wallet.ID} value={wallet.ID}>
                             {wallet.name} ({wallet.type})
@@ -230,10 +198,10 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
                 </button>
                 <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={createTransaction.isPending}
                     className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
                 >
-                    {isLoading ? (
+                    {createTransaction.isPending ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Saving...
