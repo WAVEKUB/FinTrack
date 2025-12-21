@@ -9,5 +9,6 @@ func SyncDatabase() {
 		&models.Wallet{},
 		&models.Transaction{},
 		&models.Category{},
+		&models.Budget{},
 	)
 }
