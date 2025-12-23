@@ -26,5 +26,9 @@ func TransactionRoutes(router *gin.RouterGroup) {
 		transaction.DELETE("/:id", controllers.DeleteTransaction)
 		// Delete Old Transactions
 		transaction.DELETE("/cleanup", controllers.DeleteOldTransactions)
+		// Get Transactions By Category
+		transaction.GET("/category/:category_id", controllers.GetTransactionsByCategory)
+		// Get Transactions By Wallet ID
+		transaction.GET("/wallet/:wallet_id", controllers.GetTransactionsByWalletId)
 	}
 }

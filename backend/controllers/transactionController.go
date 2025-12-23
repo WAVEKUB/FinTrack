@@ -60,6 +60,30 @@ func GetTransactionById(c *gin.Context) {
 	c.JSON(http.StatusOK, transaction)
 }
 
+// Get Transactions By Category
+func GetTransactionsByCategory(c *gin.Context) {
+	userID, _ := getUserID(c)
+	categoryId := c.Param("category_id")
+	transactions, err := services.GetTransactionsByCategory(categoryId, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get transactions by category"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": transactions})
+}
+
+// Get Transactions By Wallet ID
+func GetTransactionsByWalletId(c *gin.Context) {
+	userID, _ := getUserID(c)
+	walletId := c.Param("wallet_id")
+	transactions, err := services.GetTransactionsByWalletId(walletId, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get transactions by wallet id"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": transactions})
+}
+
 // Update Transaction By ID
 func UpdateTransaction(c *gin.Context) {
 	userID, _ := getUserID(c)
