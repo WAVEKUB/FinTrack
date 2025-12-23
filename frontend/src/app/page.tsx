@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { TransactionTable, Transaction as UiTransaction } from "@/components/TransactionTable";
+import { DashboardCharts } from "@/components/DashboardCharts";
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTransactions, useTransactionSummary } from "@/hooks/useTransactions";
@@ -74,6 +75,9 @@ export default function Home() {
             </div>
           ))}
         </div>
+
+        {/* Charts */}
+        <DashboardCharts transactions={rawTransactions || []} isLoading={isLoading} />
 
         {/* Recent Activity */}
         <div className="space-y-4">
