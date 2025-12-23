@@ -119,6 +119,20 @@ func GetTransactionById(id string, userId uint) (*models.Transaction, error) {
 	return &transaction, nil
 }
 
+// Read All Transactions By Category
+func GetTransactionsByCategory(categoryId string, userId uint) ([]models.Transaction, error) {
+	var transactions []models.Transaction
+	result := initializers.DB.Where("category_id = ? AND user_id = ?", categoryId, userId).Order("date desc").Find(&transactions)
+	return transactions, result.Error
+}
+
+// Read All Transactions By Wallet ID
+func GetTransactionsByWalletId(walletId string, userId uint) ([]models.Transaction, error) {
+	var transactions []models.Transaction
+	result := initializers.DB.Where("wallet_id = ? AND user_id = ?", walletId, userId).Order("date desc").Find(&transactions)
+	return transactions, result.Error
+}
+
 // Update Transaction
 func UpdateTransaction(id string, userId uint, updateData models.Transaction) (*models.Transaction, error) {
 	var transaction models.Transaction
