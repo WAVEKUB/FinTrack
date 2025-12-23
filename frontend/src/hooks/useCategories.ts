@@ -2,9 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 
 export interface Category {
-    ID: number;
+    ID: number; // gorm.Model ID is usually ID unless overridden. Let's assume ID.
     name: string;
-    type: "income" | "expense";
+    type: string;
+    icon: string;
+    color: string;
 }
 
 export const useCategories = () => {

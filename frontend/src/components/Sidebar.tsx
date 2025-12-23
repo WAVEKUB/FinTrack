@@ -24,14 +24,9 @@ const sidebarItems = [
         icon: CreditCard,
     },
     {
-        title: "Budget",
-        href: "/budget",
+        title: "Budgets & Goals",
+        href: "/budgets",
         icon: Wallet,
-    },
-    {
-        title: "Goals",
-        href: "/goals",
-        icon: Target,
     },
     {
         title: "Settings",
