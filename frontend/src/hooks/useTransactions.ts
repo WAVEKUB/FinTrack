@@ -60,3 +60,14 @@ export const useCreateTransaction = () => {
         },
     });
 };
+export const useTransactionsByCategory = (categoryId: string | number | null) => {
+    return useQuery({
+        queryKey: ["transactions", "category", categoryId],
+        queryFn: async () => {
+            if (!categoryId) return [];
+            const { data } = await api.get<{ data: Transaction[] }>(`/transactions/category/${categoryId}`);
+            return data.data;
+        },
+        enabled: !!categoryId,
+    });
+};
