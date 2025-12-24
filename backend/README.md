@@ -35,8 +35,8 @@ go mod download
 Create a `.env` file in the `backend` directory. You can copy the variables below:
 
 ```env
-PORT=3000
-CLIENT_ORIGIN=http://localhost:5173
+PORT=8080
+CLIENT_ORIGIN=http://localhost:3000
 
 # Database Configuration
 DB_HOST=localhost
@@ -72,7 +72,7 @@ The application includes an auto-migration feature (in `initializers/syncDatabas
 go run main.go
 ```
 
-The server will start on port `3000` (or the port defined in your `.env`).
+The server will start on port `8080` (or the port defined in your `.env`).
 
 ## API Endpoints
 
@@ -94,3 +94,4 @@ The API is served under `/api/v1`.
 - `models`: Database structs and GORM models.
 - `routes`: API route definitions.
 - `services`: Business logic (optional, if separated from controllers).
+
