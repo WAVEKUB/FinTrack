@@ -17,6 +17,7 @@ export interface RegisterCredentials {
 
 export const useLogin = () => {
     const router = useRouter();
+    const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async (credentials: LoginCredentials) => {
@@ -29,6 +30,8 @@ export const useLogin = () => {
                 // Also set localStorage for compatibility if needed, though cookie is primary now
                 localStorage.setItem("token", data.token);
             }
+            // Invalidate all queries to force refetch with new auth token
+            queryClient.invalidateQueries();
             toast.success("Logged in successfully");
             router.push("/");
             router.refresh(); // Refresh to update server components
