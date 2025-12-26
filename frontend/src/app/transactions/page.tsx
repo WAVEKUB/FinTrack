@@ -15,6 +15,11 @@ interface TransactionAPI {
     category_id: number;
     amount: number;
     type: string;
+    category?: {
+        ID: number;
+        name: string;
+        type: string;
+    };
 }
 
 export default function TransactionsPage() {
@@ -44,7 +49,7 @@ export default function TransactionsPage() {
                 id: t.ID.toString(),
                 date: t.date,
                 description: t.note,
-                category: "Category " + t.category_id,
+                category: t.category?.name || "Unknown",
                 amount: t.amount,
                 type: t.type.toLowerCase() as "income" | "expense",
             }));

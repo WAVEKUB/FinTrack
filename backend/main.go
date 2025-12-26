@@ -13,11 +13,17 @@ func init() {
 	initializers.LoadEnvVariables()
 	initializers.ConnectToDB()
 	initializers.SyncDatabase()
+	initializers.SeedDatabase()
 }
 
 func main() {
 
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+	
+	// Disable trailing slash redirects to avoid redirect loops with Next.js proxy
+	r.RedirectTrailingSlash = false
 
 	r.Use(
 		cors.New(cors.Config{
