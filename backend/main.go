@@ -34,6 +34,7 @@ func main() {
 	routes.WalletRoutes(v1)
 	routes.BudgetRoutes(v1)
 	routes.CategoryRoutes(v1)
+	routes.GoalRoutes(v1)
 
 	r.Run(":" + os.Getenv("PORT"))
 
