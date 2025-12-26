@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/WAVEKUB/fintrack-backend/dto"
 	"github.com/WAVEKUB/fintrack-backend/models"
 	"github.com/WAVEKUB/fintrack-backend/services"
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,7 @@ func CreateCategory(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, category)
+	c.JSON(http.StatusCreated, gin.H{"data": dto.ToCategoryDTO(category)})
 }
 
 func GetCategories(c *gin.Context) {
@@ -45,7 +46,7 @@ func GetCategories(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": categories})
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToCategoryDTOs(categories)})
 }
 
 func UpdateCategory(c *gin.Context) {
@@ -80,7 +81,7 @@ func UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, existingCategory)
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToCategoryDTO(*existingCategory)})
 }
 
 func DeleteCategory(c *gin.Context) {

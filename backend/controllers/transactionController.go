@@ -3,6 +3,8 @@ package controllers
 import (
 	"net/http"
 	"time"
+
+	"github.com/WAVEKUB/fintrack-backend/dto"
 	"github.com/WAVEKUB/fintrack-backend/models"
 	"github.com/WAVEKUB/fintrack-backend/services"
 	"github.com/gin-gonic/gin"
@@ -34,7 +36,7 @@ func CreateTransaction(c *gin.Context) {
 	}
 
 	// return success
-	c.JSON(http.StatusCreated, transaction)
+	c.JSON(http.StatusCreated, gin.H{"data": dto.ToTransactionDTO(transaction)})
 }
 
 // Get Transactions
@@ -45,7 +47,7 @@ func GetTransactions(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get transactions"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": transactions})
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToTransactionDTOs(transactions)})
 }
 
 // Get Transaction By ID
@@ -57,7 +59,7 @@ func GetTransactionById(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, transaction)
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToTransactionDTO(*transaction)})
 }
 
 // Get Transactions By Category
@@ -69,7 +71,7 @@ func GetTransactionsByCategory(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get transactions by category"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": transactions})
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToTransactionDTOs(transactions)})
 }
 
 // Get Transactions By Wallet ID
@@ -81,7 +83,7 @@ func GetTransactionsByWalletId(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get transactions by wallet id"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": transactions})
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToTransactionDTOs(transactions)})
 }
 
 // Update Transaction By ID
@@ -99,7 +101,7 @@ func UpdateTransaction(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, updatedTransaction)
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToTransactionDTO(*updatedTransaction)})
 
 }
 
