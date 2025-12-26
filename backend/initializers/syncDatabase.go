@@ -10,5 +10,6 @@ func SyncDatabase() {
 		&models.Transaction{},
 		&models.Category{},
 		&models.Budget{},
+		&models.Goal{},
 	)
 }
