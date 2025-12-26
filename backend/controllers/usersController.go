@@ -3,6 +3,8 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/WAVEKUB/fintrack-backend/dto"
+	"github.com/WAVEKUB/fintrack-backend/models"
 	"github.com/WAVEKUB/fintrack-backend/services"
 	"github.com/gin-gonic/gin"
 )
@@ -119,19 +121,20 @@ func (uc *UsersController) DeleteUser(c *gin.Context) {
 func (uc *UsersController) Validate(c *gin.Context) {
 	// get user from middleware
 	user, _ := c.Get("user")
+	userModel := user.(models.User)
 
 	// send user back to client
 	c.JSON(http.StatusOK, gin.H{
 		"message": "I'm logged in!",
-		"user":    user,
+		"user":    dto.ToUserDTO(userModel),
 	})
 }
 
 func (uc *UsersController) Profile(c *gin.Context) {
 	// get user from middleware
 	user, _ := c.Get("user")
+	userModel := user.(models.User)
 
 	// return user
-	c.JSON(http.StatusOK, gin.H{"user": user})
-
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToUserDTO(userModel)})
 }

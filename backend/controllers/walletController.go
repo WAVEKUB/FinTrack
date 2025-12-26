@@ -2,9 +2,11 @@ package controllers
 
 import (
 	"net/http"
-	"github.com/gin-gonic/gin"
+
+	"github.com/WAVEKUB/fintrack-backend/dto"
 	"github.com/WAVEKUB/fintrack-backend/models"
 	"github.com/WAVEKUB/fintrack-backend/services"
+	"github.com/gin-gonic/gin"
 )
 
 // POST /wallets
@@ -23,7 +25,7 @@ func CreateWallet(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, wallet)
+	c.JSON(http.StatusCreated, gin.H{"data": dto.ToWalletDTO(wallet)})
 }
 
 // GET /wallets
@@ -36,7 +38,7 @@ func GetWallets(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": wallets})
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToWalletDTOs(*wallets)})
 }
 
 // GET /wallets/:id
@@ -50,7 +52,7 @@ func GetWalletByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, wallet)
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToWalletDTO(*wallet)})
 }
 
 // PUT /wallets/:id
@@ -70,7 +72,7 @@ func UpdateWallet(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, updatedWallet)
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToWalletDTO(*updatedWallet)})
 }
 
 // DELETE /wallets/:id

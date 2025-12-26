@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/WAVEKUB/fintrack-backend/dto"
 	"github.com/WAVEKUB/fintrack-backend/models"
 	"github.com/WAVEKUB/fintrack-backend/services"
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,7 @@ func CreateBudget(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, budget)
+	c.JSON(http.StatusCreated, gin.H{"data": dto.ToBudgetDTO(budget)})
 }
 
 func GetBudgets(c *gin.Context) {
@@ -45,7 +46,7 @@ func GetBudgets(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": budgets})
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToBudgetDTOs(budgets)})
 }
 
 func UpdateBudget(c *gin.Context) {
@@ -84,7 +85,7 @@ func UpdateBudget(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, existingBudget)
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToBudgetDTO(*existingBudget)})
 }
 
 func DeleteBudget(c *gin.Context) {

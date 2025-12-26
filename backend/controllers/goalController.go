@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/WAVEKUB/fintrack-backend/dto"
 	"github.com/WAVEKUB/fintrack-backend/models"
 	"github.com/WAVEKUB/fintrack-backend/services"
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,7 @@ func CreateGoal(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, goal)
+	c.JSON(http.StatusCreated, gin.H{"data": dto.ToGoalDTO(goal)})
 }
 
 func GetGoals(c *gin.Context) {
@@ -45,7 +46,7 @@ func GetGoals(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": goals})
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToGoalDTOs(goals)})
 }
 
 func GetGoal(c *gin.Context) {
@@ -63,7 +64,7 @@ func GetGoal(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": goal})
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToGoalDTO(*goal)})
 }
 
 func UpdateGoal(c *gin.Context) {
@@ -99,7 +100,7 @@ func UpdateGoal(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, existingGoal)
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToGoalDTO(*existingGoal)})
 }
 
 func DeleteGoal(c *gin.Context) {
@@ -143,5 +144,5 @@ func AddToGoalHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, goal)
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToGoalDTO(*goal)})
 }
