@@ -18,6 +18,9 @@ type Transaction struct {
 	WalletID   uint `json:"wallet_id"`
 	CategoryID uint `json:"category_id"`
 
+	// Relation - preload for JSON response
+	Category Category `gorm:"foreignKey:CategoryID" json:"category"`
+
 	// Transfer
 	TargetWalletID uint `json:"target_wallet_id"`
 }

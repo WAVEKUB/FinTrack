@@ -105,7 +105,7 @@ func CreateTransaction(userID uint, transaction *models.Transaction) error {
 // Read All Transactions By User ID
 func GetTransactionsByUserId(userId uint) ([]models.Transaction, error) {
 	var transactions []models.Transaction
-	result := initializers.DB.Where("user_id = ?", userId).Order("date desc").Find(&transactions)
+	result := initializers.DB.Preload("Category").Where("user_id = ?", userId).Order("date desc").Find(&transactions)
 	return transactions, result.Error
 }
 
