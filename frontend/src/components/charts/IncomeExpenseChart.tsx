@@ -24,9 +24,10 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
             if (!acc[date]) {
                 acc[date] = { date, income: 0, expense: 0 };
             }
-            if (t.type === "income") {
+            const type = t.type.toLowerCase();
+            if (type === "income") {
                 acc[date].income += t.amount;
-            } else {
+            } else if (type === "expense") {
                 acc[date].expense += t.amount;
             }
             return acc;
@@ -85,7 +86,7 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
                 />
                 <Area
                     type="monotone"
-                    dataKey="expense"
+                    dataKey="income"
                     stroke="#10b981"
                     fillOpacity={1}
                     fill="url(#colorIncome)"
@@ -93,7 +94,7 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
                 />
                 <Area
                     type="monotone"
-                    dataKey="income"
+                    dataKey="expense"
                     stroke="#ef4444"
                     fillOpacity={1}
                     fill="url(#colorExpense)"
