@@ -28,22 +28,17 @@ export function SpendingPieChart({ transactions, categories, onSelectCategory }:
         const expenses = transactions.filter((t) => t.type.toLowerCase() === "expense");
 
         const grouped = expenses.reduce((acc, t) => {
-            const categoryName = categoryMap.get(String(t.category_id)) || "Unknown";
+            // Use preloaded category name from transaction, fallback to lookup
+            const categoryName = t.category?.name || categoryMap.get(String(t.category_id)) || "Unknown";
             if (!acc[categoryName]) {
-                acc[categoryName] = 0;
+                acc[categoryName] = { value: 0, id: t.category?.ID || t.category_id };
             }
-            acc[categoryName] += Math.abs(t.amount);
+            acc[categoryName].value += Math.abs(t.amount);
             return acc;
-        }, {} as Record<string, number>);
+        }, {} as Record<string, { value: number; id: number }>);
 
         return Object.entries(grouped)
-            .map(([name, value]) => {
-                // Find ID for the name - reverse lookup or store it in grouped
-                // More efficient: store ID in grouped value or change reducer
-                // Let's rely on the name matching back to a category or change grouped to store objects
-                const category = categories.find(c => c.name === name);
-                return { name, value, id: category?.ID };
-            })
+            .map(([name, data]) => ({ name, value: data.value, id: data.id }))
             .sort((a, b) => b.value - a.value);
     }, [transactions, categories]);
 

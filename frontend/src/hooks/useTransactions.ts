@@ -9,6 +9,13 @@ export interface Transaction {
     category_id: number;
     wallet_id: number;
     type: string;
+    category?: {
+        ID: number;
+        name: string;
+        type: string;
+        icon?: string;
+        color?: string;
+    };
 }
 
 export interface CreateTransactionDTO {
@@ -26,23 +33,25 @@ export interface TransactionSummary {
     expense: number;
 }
 
-export const useTransactions = () => {
+export const useTransactions = (enabled: boolean = true) => {
     return useQuery({
         queryKey: ["transactions"],
         queryFn: async () => {
             const { data } = await api.get<{ data: Transaction[] }>("/transactions");
             return data.data;
         },
+        enabled,
     });
 };
 
-export const useTransactionSummary = () => {
+export const useTransactionSummary = (enabled: boolean = true) => {
     return useQuery({
         queryKey: ["transaction-summary"],
         queryFn: async () => {
             const { data } = await api.get<TransactionSummary>("/transactions/summary");
             return data;
         },
+        enabled,
     });
 };
 
