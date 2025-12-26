@@ -24,7 +24,7 @@ export interface GoalInput {
 export const goalService = {
     getGoals: async (): Promise<Goal[]> => {
         const response = await api.get('/goals');
-        return response.data.goals;
+        return response.data.data || [];
     },
 
     createGoal: async (goal: GoalInput): Promise<Goal> => {

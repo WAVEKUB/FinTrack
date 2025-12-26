@@ -33,7 +33,7 @@ export interface BudgetInput {
 export const budgetService = {
     getBudgets: async (): Promise<Budget[]> => {
         const response = await api.get('/budgets');
-        return response.data.budgets;
+        return response.data.data || [];
     },
 
     createBudget: async (budget: BudgetInput): Promise<Budget> => {
