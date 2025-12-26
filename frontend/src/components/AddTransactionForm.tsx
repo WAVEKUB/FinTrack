@@ -4,25 +4,16 @@ import { useState, useEffect } from "react";
 import { ArrowDownIcon, ArrowUpIcon, Loader2 } from "lucide-react";
 import { useWallets } from "@/hooks/useWallets";
 import { useCreateTransaction } from "@/hooks/useTransactions";
+import { useCategories } from "@/hooks/useCategories";
 
 interface AddTransactionFormProps {
     onSuccess: () => void;
     onCancel: () => void;
 }
 
-
-
-// Temporary hardcoded categories until API is available
-const CATEGORIES = [
-    { id: 1, name: "Groceries" },
-    { id: 2, name: "Transport" },
-    { id: 3, name: "Entertainment" },
-    { id: 4, name: "Utilities" },
-    { id: 5, name: "Salary" },
-];
-
 export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormProps) {
     const { data: wallets = [], isLoading: isLoadingWallets } = useWallets();
+    const { data: categories = [], isLoading: isLoadingCategories } = useCategories();
     const createTransaction = useCreateTransaction();
     const [error, setError] = useState("");
     const [formData, setFormData] = useState({
@@ -39,6 +30,16 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
             setFormData(prev => ({ ...prev, wallet_id: wallets[0].ID.toString() }));
         }
     }, [wallets]);
+
+    // Set default category when categories load or type changes
+    useEffect(() => {
+        const filteredCategories = categories.filter(
+            (cat) => cat.type === formData.type.toUpperCase()
+        );
+        if (filteredCategories.length > 0) {
+            setFormData(prev => ({ ...prev, category_id: filteredCategories[0].ID.toString() }));
+        }
+    }, [categories, formData.type]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -144,11 +145,14 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
                     onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
                     className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
                 >
-                    {CATEGORIES.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                        </option>
-                    ))}
+                    {isLoadingCategories && <option value="">Loading categories...</option>}
+                    {categories
+                        .filter((cat) => cat.type === formData.type.toUpperCase())
+                        .map((cat) => (
+                            <option key={cat.ID} value={cat.ID}>
+                                {cat.name}
+                            </option>
+                        ))}
                 </select>
             </div>
 
