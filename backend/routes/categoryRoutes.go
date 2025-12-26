@@ -10,8 +10,8 @@ func CategoryRoutes(r *gin.RouterGroup) {
 	categoryGroup := r.Group("/categories")
 	categoryGroup.Use(middleware.RequireAuth)
 	{
-		categoryGroup.POST("/", controllers.CreateCategory)
-		categoryGroup.GET("/", controllers.GetCategories)
+		categoryGroup.POST("", controllers.CreateCategory)
+		categoryGroup.GET("", controllers.GetCategories)
 		categoryGroup.PUT("/:id", controllers.UpdateCategory)
 		categoryGroup.DELETE("/:id", controllers.DeleteCategory)
 	}
