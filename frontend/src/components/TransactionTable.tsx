@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownIcon, ArrowUpIcon, MoreHorizontal } from "lucide-react";
+import { ArrowDownIcon, ArrowUpIcon, Edit2, Trash2 } from "lucide-react";
 
 export interface Transaction {
     id: string;
@@ -9,13 +9,19 @@ export interface Transaction {
     category: string;
     amount: number;
     type: "income" | "expense";
+    walletId?: number;
+    categoryId?: number;
 }
 
 interface TransactionTableProps {
     transactions: Transaction[];
+    onEdit?: (transaction: Transaction) => void;
+    onDelete?: (transaction: Transaction) => void;
 }
 
-export function TransactionTable({ transactions }: TransactionTableProps) {
+export function TransactionTable({ transactions, onEdit, onDelete }: TransactionTableProps) {
+    const hasActions = Boolean(onEdit || onDelete);
+
     return (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
             <div className="overflow-x-auto">
@@ -34,15 +40,17 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                             <th scope="col" className="px-6 py-3 font-medium">
                                 Amount
                             </th>
-                            <th scope="col" className="px-6 py-3 font-medium text-right">
-                                Actions
-                            </th>
+                            {hasActions && (
+                                <th scope="col" className="px-6 py-3 font-medium text-right">
+                                    Actions
+                                </th>
+                            )}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                         {transactions.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="px-6 py-8 text-center text-zinc-500 dark:text-zinc-400">
+                                <td colSpan={hasActions ? 5 : 4} className="px-6 py-8 text-center text-zinc-500 dark:text-zinc-400">
                                     No transactions found
                                 </td>
                             </tr>
@@ -81,11 +89,28 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                                         }`}>
                                         {transaction.type === 'income' ? '+' : '-'}${Math.abs(transaction.amount).toFixed(2)}
                                     </td>
-                                    <td className="relative whitespace-nowrap px-6 py-4 text-right">
-                                        <button className="rounded p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </button>
-                                    </td>
+                                    {hasActions && (
+                                        <td className="whitespace-nowrap px-6 py-4 text-right">
+                                            <div className="inline-flex gap-1">
+                                                {onEdit && (
+                                                    <button
+                                                        onClick={() => onEdit(transaction)}
+                                                        className="rounded p-1.5 text-zinc-400 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
+                                                    >
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                                {onDelete && (
+                                                    <button
+                                                        onClick={() => onDelete(transaction)}
+                                                        className="rounded p-1.5 text-zinc-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    )}
                                 </tr>
                             )))}
                     </tbody>

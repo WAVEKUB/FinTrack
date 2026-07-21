@@ -1,45 +1,39 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ArrowDownIcon, ArrowUpIcon, Loader2 } from "lucide-react";
 import { useWallets } from "@/hooks/useWallets";
-import { useCreateTransaction } from "@/hooks/useTransactions";
+import { Transaction, useCreateTransaction, useUpdateTransaction } from "@/hooks/useTransactions";
 import { useCategories } from "@/hooks/useCategories";
 
 interface AddTransactionFormProps {
+    initialData?: Transaction;
     onSuccess: () => void;
     onCancel: () => void;
 }
 
-export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormProps) {
+export function AddTransactionForm({ initialData, onSuccess, onCancel }: AddTransactionFormProps) {
     const { data: wallets = [], isLoading: isLoadingWallets } = useWallets();
     const { data: categories = [], isLoading: isLoadingCategories } = useCategories();
     const createTransaction = useCreateTransaction();
+    const updateTransaction = useUpdateTransaction();
     const [error, setError] = useState("");
     const [formData, setFormData] = useState({
-        type: "expense" as "income" | "expense",
-        amount: "",
-        category_id: "1",
-        date: new Date().toISOString().split('T')[0],
-        note: "",
-        wallet_id: "",
+        type: (initialData?.type?.toLowerCase() as "income" | "expense") || "expense",
+        amount: initialData?.amount?.toString() || "",
+        category_id: initialData?.category_id?.toString() || "1",
+        date: initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        note: initialData?.note || "",
+        wallet_id: initialData?.wallet_id?.toString() || "",
     });
 
-    useEffect(() => {
-        if (wallets.length > 0 && !formData.wallet_id) {
-            setFormData(prev => ({ ...prev, wallet_id: wallets[0].ID.toString() }));
-        }
-    }, [wallets]);
-
-    // Set default category when categories load or type changes
-    useEffect(() => {
-        const filteredCategories = categories.filter(
-            (cat) => cat.type === formData.type.toUpperCase()
-        );
-        if (filteredCategories.length > 0) {
-            setFormData(prev => ({ ...prev, category_id: filteredCategories[0].ID.toString() }));
-        }
-    }, [categories, formData.type]);
+    const filteredCategories = categories.filter(
+        (cat) => cat.type === formData.type.toUpperCase()
+    );
+    const selectedWalletId = formData.wallet_id || wallets[0]?.ID.toString() || "";
+    const selectedCategoryId = filteredCategories.some((cat) => cat.ID.toString() === formData.category_id)
+        ? formData.category_id
+        : filteredCategories[0]?.ID.toString() || "";
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -50,13 +44,17 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
                 ...formData,
                 amount: parseFloat(formData.amount),
                 type: formData.type,
-                wallet_id: parseInt(formData.wallet_id),
+                wallet_id: parseInt(selectedWalletId),
                 note: formData.note,
-                category_id: parseInt(formData.category_id),
+                category_id: parseInt(selectedCategoryId),
                 date: new Date(formData.date).toISOString(),
             };
 
-            await createTransaction.mutateAsync(payload);
+            if (initialData) {
+                await updateTransaction.mutateAsync({ id: initialData.ID, transaction: payload });
+            } else {
+                await createTransaction.mutateAsync(payload);
+            }
             onSuccess();
         } catch (err) {
             console.error(err);
@@ -70,7 +68,7 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
             <div className="grid grid-cols-2 gap-4">
                 <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, type: "expense" })}
+                    onClick={() => setFormData({ ...formData, type: "expense", category_id: "" })}
                     className={`flex items-center justify-center gap-2 rounded-lg border p-3 text-sm font-medium transition-colors ${formData.type === "expense"
                         ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-900/20 dark:text-rose-400"
                         : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900"
@@ -81,7 +79,7 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
                 </button>
                 <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, type: "income" })}
+                    onClick={() => setFormData({ ...formData, type: "income", category_id: "" })}
                     className={`flex items-center justify-center gap-2 rounded-lg border p-3 text-sm font-medium transition-colors ${formData.type === "income"
                         ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400"
                         : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900"
@@ -100,7 +98,7 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
                 <select
                     id="wallet"
                     required
-                    value={formData.wallet_id}
+                    value={selectedWalletId}
                     onChange={(e) => setFormData({ ...formData, wallet_id: e.target.value })}
                     className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
                 >
@@ -141,13 +139,12 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
                 </label>
                 <select
                     id="category"
-                    value={formData.category_id}
+                    value={selectedCategoryId}
                     onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
                     className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
                 >
                     {isLoadingCategories && <option value="">Loading categories...</option>}
-                    {categories
-                        .filter((cat) => cat.type === formData.type.toUpperCase())
+                    {filteredCategories
                         .map((cat) => (
                             <option key={cat.ID} value={cat.ID}>
                                 {cat.name}
@@ -202,16 +199,16 @@ export function AddTransactionForm({ onSuccess, onCancel }: AddTransactionFormPr
                 </button>
                 <button
                     type="submit"
-                    disabled={createTransaction.isPending}
+                    disabled={createTransaction.isPending || updateTransaction.isPending}
                     className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
                 >
-                    {createTransaction.isPending ? (
+                    {createTransaction.isPending || updateTransaction.isPending ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Saving...
                         </>
                     ) : (
-                        "Save Transaction"
+                        initialData ? "Update Transaction" : "Save Transaction"
                     )}
                 </button>
             </div>

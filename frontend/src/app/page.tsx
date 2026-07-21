@@ -3,7 +3,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { TransactionTable, Transaction as UiTransaction } from "@/components/TransactionTable";
 import { DashboardCharts } from "@/components/DashboardCharts";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTransactions, useTransactionSummary, Transaction } from "@/hooks/useTransactions";
 import { useCategories } from "@/hooks/useCategories";

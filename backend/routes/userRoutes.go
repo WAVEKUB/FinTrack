@@ -18,6 +18,8 @@ func UserRoutes(router *gin.RouterGroup) {
 	{
 		// Update User
 		userRoutes.PUT("/update", usersController.UpdateUser)
+		// Change Password
+		userRoutes.PUT("/password", usersController.ChangePassword)
 		// Delete User
 		userRoutes.DELETE("/delete", usersController.DeleteUser)
 		// Get User Profile

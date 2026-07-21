@@ -9,6 +9,12 @@ interface SpendingPieChartProps {
     onSelectCategory?: (categoryId: number) => void;
 }
 
+type SpendingDatum = {
+    name: string;
+    value: number;
+    id: number;
+};
+
 const COLORS = [
     "#2563eb", // blue-600
     "#dc2626", // red-600
@@ -42,7 +48,7 @@ export function SpendingPieChart({ transactions, categories, onSelectCategory }:
             .sort((a, b) => b.value - a.value);
     }, [transactions, categories]);
 
-    const handlePieClick = (data: any) => {
+    const handlePieClick = (data: SpendingDatum) => {
         if (onSelectCategory && data && data.id) {
             onSelectCategory(data.id);
         }
@@ -82,7 +88,7 @@ export function SpendingPieChart({ transactions, categories, onSelectCategory }:
                         boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                     }}
                     itemStyle={{ fontSize: "12px" }}
-                    formatter={(value: any) => `$${value.toFixed(2)}`}
+                    formatter={(value: number | string) => `$${Number(value).toFixed(2)}`}
                 />
                 <Legend
                     layout="vertical"

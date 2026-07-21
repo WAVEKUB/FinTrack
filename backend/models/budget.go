@@ -23,4 +23,8 @@ type Budget struct {
 	User     User     `json:"user"`
 	Category Category `json:"category"`
 	Wallet   Wallet   `json:"wallet"`
+
+	SpentAmount     float64 `json:"spent_amount" gorm:"-"`
+	RemainingAmount float64 `json:"remaining_amount" gorm:"-"`
+	Progress        float64 `json:"progress" gorm:"-"`
 }

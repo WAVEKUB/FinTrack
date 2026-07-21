@@ -7,12 +7,14 @@ import { useEffect, useState, useCallback } from "react";
 import { PlusIcon, SearchIcon } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { AddTransactionForm } from "@/components/AddTransactionForm";
+import { useDeleteTransaction } from "@/hooks/useTransactions";
 
 interface TransactionAPI {
     ID: number;
     date: string;
     note: string;
     category_id: number;
+    wallet_id: number;
     amount: number;
     type: string;
     category?: {
@@ -29,7 +31,9 @@ export default function TransactionsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState<"all" | "income" | "expense">("all");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [editingTransaction, setEditingTransaction] = useState<TransactionAPI | undefined>(undefined);
     const router = useRouter();
+    const deleteTransaction = useDeleteTransaction();
 
     const fetchTransactions = useCallback(async () => {
         setIsLoading(true);
@@ -52,6 +56,8 @@ export default function TransactionsPage() {
                 category: t.category?.name || "Unknown",
                 amount: t.amount,
                 type: t.type.toLowerCase() as "income" | "expense",
+                walletId: t.wallet_id,
+                categoryId: t.category_id,
             }));
 
             setTransactions(mappedTransactions);
@@ -83,6 +89,29 @@ export default function TransactionsPage() {
         setFilteredTransactions(filtered);
     }, [searchQuery, typeFilter, transactions]);
 
+    const openEditModal = (transaction: Transaction) => {
+        setEditingTransaction({
+            ID: Number(transaction.id),
+            date: transaction.date,
+            note: transaction.description,
+            category_id: transaction.categoryId || 0,
+            wallet_id: transaction.walletId || 0,
+            amount: transaction.amount,
+            type: transaction.type,
+        });
+        setIsAddModalOpen(true);
+    };
+
+    const handleDelete = async (transaction: Transaction) => {
+        if (!confirm(`Delete "${transaction.description}"?`)) return;
+        try {
+            await deleteTransaction.mutateAsync(Number(transaction.id));
+            fetchTransactions();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="space-y-6">
@@ -97,7 +126,10 @@ export default function TransactionsPage() {
                     </div>
                     <div>
                         <button
-                            onClick={() => setIsAddModalOpen(true)}
+                            onClick={() => {
+                                setEditingTransaction(undefined);
+                                setIsAddModalOpen(true);
+                            }}
                             className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
                         >
                             <PlusIcon className="mr-2 h-4 w-4" />
@@ -137,20 +169,40 @@ export default function TransactionsPage() {
                         <span className="text-zinc-400">Loading transactions...</span>
                     </div>
                 ) : (
-                    <TransactionTable transactions={filteredTransactions} />
+                    <TransactionTable
+                        transactions={filteredTransactions}
+                        onEdit={openEditModal}
+                        onDelete={handleDelete}
+                    />
                 )}
 
                 <Modal
                     isOpen={isAddModalOpen}
-                    onClose={() => setIsAddModalOpen(false)}
-                    title="Add New Transaction"
+                    onClose={() => {
+                        setIsAddModalOpen(false);
+                        setEditingTransaction(undefined);
+                    }}
+                    title={editingTransaction ? "Edit Transaction" : "Add New Transaction"}
                 >
                     <AddTransactionForm
+                        initialData={editingTransaction ? {
+                            ID: editingTransaction.ID,
+                            amount: editingTransaction.amount,
+                            date: editingTransaction.date,
+                            note: editingTransaction.note,
+                            category_id: editingTransaction.category_id,
+                            wallet_id: editingTransaction.wallet_id,
+                            type: editingTransaction.type,
+                        } : undefined}
                         onSuccess={() => {
                             setIsAddModalOpen(false);
+                            setEditingTransaction(undefined);
                             fetchTransactions();
                         }}
-                        onCancel={() => setIsAddModalOpen(false)}
+                        onCancel={() => {
+                            setIsAddModalOpen(false);
+                            setEditingTransaction(undefined);
+                        }}
                     />
                 </Modal>
             </div>

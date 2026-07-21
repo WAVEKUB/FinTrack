@@ -3,27 +3,26 @@
 import { useState, useEffect, useCallback } from "react";
 import Cookies from "js-cookie";
 
+const readAuthState = () => {
+    const cookieToken = Cookies.get("Authorization");
+    const localToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+    return !!(cookieToken || localToken);
+};
+
 /**
  * Hook to check if the user is authenticated.
  * Checks both cookie and localStorage for the token.
  * Re-checks auth state when window regains focus or storage changes.
  */
 export const useAuthState = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(() => readAuthState());
 
     const checkAuth = useCallback(() => {
-        // Check both cookie and localStorage (login saves to both)
-        const cookieToken = Cookies.get("Authorization");
-        const localToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-        const hasToken = !!(cookieToken || localToken);
-        setIsAuthenticated(hasToken);
+        setIsAuthenticated(readAuthState());
     }, []);
 
     useEffect(() => {
-        // Initial check
-        checkAuth();
-
         // Listen for storage changes (login/logout in other tabs)
         const handleStorage = (e: StorageEvent) => {
             if (e.key === "token" || e.key === null) {

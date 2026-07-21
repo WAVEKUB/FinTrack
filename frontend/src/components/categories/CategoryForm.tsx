@@ -39,9 +39,10 @@ export function CategoryForm({ onSuccess, onCancel }: CategoryFormProps) {
             await queryClient.invalidateQueries({ queryKey: ["categories"] });
             toast.success("Category created successfully");
             onSuccess();
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
-            toast.error(error.response?.data?.error || "Failed to create category");
+            const message = error instanceof Error ? error.message : "Failed to create category";
+            toast.error(message);
         } finally {
             setIsLoading(false);
         }

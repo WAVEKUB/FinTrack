@@ -4,6 +4,9 @@ export interface Budget {
     ID: number;
     name: string;
     amount: number;
+    spent: number;
+    remaining: number;
+    progress: number;
     period: string;
     start_date: string;
     end_date: string;
@@ -28,6 +31,7 @@ export interface BudgetInput {
     start_date: string;
     end_date: string;
     category_id: number;
+    wallet_id?: number | null;
 }
 
 export const budgetService = {

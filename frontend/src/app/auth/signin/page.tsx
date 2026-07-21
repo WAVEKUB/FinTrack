@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useLogin } from '@/hooks/useAuth';
-import Cookies from 'js-cookie';
 
 export default function SigninPage() {
     const { mutate: login, isPending: isLoading } = useLogin();

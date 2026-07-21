@@ -152,6 +152,9 @@ type BudgetDTO struct {
 	ID         uint         `json:"ID"`
 	Name       string       `json:"name"`
 	Amount     float64      `json:"amount"`
+	Spent      float64      `json:"spent"`
+	Remaining  float64      `json:"remaining"`
+	Progress   float64      `json:"progress"`
 	Period     string       `json:"period"`
 	StartDate  string       `json:"start_date"`
 	EndDate    string       `json:"end_date"`
@@ -169,6 +172,9 @@ func ToBudgetDTO(budget models.Budget) BudgetDTO {
 		ID:         budget.ID,
 		Name:       budget.Name,
 		Amount:     budget.Amount,
+		Spent:      budget.SpentAmount,
+		Remaining:  budget.RemainingAmount,
+		Progress:   budget.Progress,
 		Period:     budget.Period,
 		StartDate:  budget.StartDate.Format(time.RFC3339),
 		EndDate:    budget.EndDate.Format(time.RFC3339),

@@ -2,11 +2,17 @@ package services
 
 import (
 	"errors"
-
+	"strings"
 	"time"
+
 	"github.com/WAVEKUB/fintrack-backend/initializers"
 	"github.com/WAVEKUB/fintrack-backend/models"
 	"gorm.io/gorm"
+)
+
+const (
+	transactionTypeIncome  = "INCOME"
+	transactionTypeExpense = "EXPENSE"
 )
 
 // Dashboard Structure
@@ -50,9 +56,9 @@ func GetDashboardSummary(userID uint) (DashboardSummary, error) {
 
 	// separate Income and Expense into Struct
 	for _, r := range results {
-		if r.Type == "INCOME" {
+		if strings.EqualFold(r.Type, transactionTypeIncome) {
 			summary.Income = r.Total
-		} else if r.Type == "EXPENSE" {
+		} else if strings.EqualFold(r.Type, transactionTypeExpense) {
 			summary.Expense = r.Total
 		}
 	}
@@ -65,40 +71,18 @@ func CreateTransaction(userID uint, transaction *models.Transaction) error {
 	return initializers.DB.Transaction(func(tx *gorm.DB) error {
 		// Ensure user ID is set
 		transaction.UserID = userID
+		transaction.Type = normalizeTransactionType(transaction.Type)
 
-		// 1. Create Transaction
+		var wallet models.Wallet
+		if err := tx.Where("id = ? AND user_id = ?", transaction.WalletID, userID).First(&wallet).Error; err != nil {
+			return err
+		}
+
 		if err := tx.Create(&transaction).Error; err != nil {
 			return err
 		}
 
-		// 2. Update Wallet Balance
-		// Get Wallet
-		var wallet models.Wallet
-		if err := tx.First(&wallet, transaction.WalletID).Error; err != nil {
-			return err
-		}
-
-		// Check ownership
-		if wallet.UserID != userID {
-			return errors.New("wallet does not belong to user")
-		}
-
-		// Calculate new balance
-		if transaction.Type == "INCOME" {
-			wallet.Balance += transaction.Amount
-		} else if transaction.Type == "EXPENSE" {
-			wallet.Balance -= transaction.Amount
-		} else {
-             // Handle other types if needed (e.g. TRANSFER)
-             // For now we only handle simple INCOME/EXPENSE based on current logic context
-        }
-
-		// Save Wallet
-		if err := tx.Save(&wallet).Error; err != nil {
-			return err
-		}
-
-		return nil
+		return adjustWalletBalance(tx, transaction.WalletID, userID, transactionBalanceImpact(*transaction))
 	})
 }
 
@@ -136,22 +120,107 @@ func GetTransactionsByWalletId(walletId string, userId uint) ([]models.Transacti
 // Update Transaction
 func UpdateTransaction(id string, userId uint, updateData models.Transaction) (*models.Transaction, error) {
 	var transaction models.Transaction
-	result := initializers.DB.Where("id = ? AND user_id = ?", id, userId).First(&transaction)
-	if result.Error != nil {
-		return nil, errors.New("transaction not found or access denied")
+
+	err := initializers.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("id = ? AND user_id = ?", id, userId).First(&transaction).Error; err != nil {
+			return errors.New("transaction not found or access denied")
+		}
+
+		original := transaction
+
+		if updateData.Amount != 0 {
+			transaction.Amount = updateData.Amount
+		}
+		if updateData.Type != "" {
+			transaction.Type = normalizeTransactionType(updateData.Type)
+		}
+		if !updateData.Date.IsZero() {
+			transaction.Date = updateData.Date
+		}
+		transaction.Note = updateData.Note
+		if updateData.WalletID != 0 {
+			transaction.WalletID = updateData.WalletID
+		}
+		if updateData.CategoryID != 0 {
+			transaction.CategoryID = updateData.CategoryID
+		}
+		transaction.TargetWalletID = updateData.TargetWalletID
+
+		var wallet models.Wallet
+		if err := tx.Where("id = ? AND user_id = ?", transaction.WalletID, userId).First(&wallet).Error; err != nil {
+			return errors.New("wallet not found or access denied")
+		}
+
+		if original.WalletID == transaction.WalletID {
+			delta := transactionBalanceImpact(transaction) - transactionBalanceImpact(original)
+			if err := adjustWalletBalance(tx, transaction.WalletID, userId, delta); err != nil {
+				return err
+			}
+		} else {
+			if err := adjustWalletBalance(tx, original.WalletID, userId, -transactionBalanceImpact(original)); err != nil {
+				return err
+			}
+			if err := adjustWalletBalance(tx, transaction.WalletID, userId, transactionBalanceImpact(transaction)); err != nil {
+				return err
+			}
+		}
+
+		if err := tx.Save(&transaction).Error; err != nil {
+			return err
+		}
+
+		return tx.Preload("Category").First(&transaction, transaction.ID).Error
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &transaction, nil
+}
+
+func normalizeTransactionType(transactionType string) string {
+	return strings.ToUpper(strings.TrimSpace(transactionType))
+}
+
+func transactionBalanceImpact(transaction models.Transaction) float64 {
+	switch normalizeTransactionType(transaction.Type) {
+	case transactionTypeIncome:
+		return transaction.Amount
+	case transactionTypeExpense:
+		return -transaction.Amount
+	default:
+		return 0
+	}
+}
+
+func adjustWalletBalance(tx *gorm.DB, walletID uint, userID uint, delta float64) error {
+	if delta == 0 {
+		return nil
 	}
 
-	initializers.DB.Model(&transaction).Updates(updateData)
-	return &transaction, nil
+	result := tx.Model(&models.Wallet{}).
+		Where("id = ? AND user_id = ?", walletID, userID).
+		Update("balance", gorm.Expr("balance + ?", delta))
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("wallet not found or access denied")
+	}
+	return nil
 }
 
 // Delete Transaction
 func DeleteTransaction(id string, userId uint) error {
-	result := initializers.DB.Where("id = ? AND user_id = ?", id, userId).Delete(&models.Transaction{})
-	if result.RowsAffected == 0 {
-		return errors.New("transaction not found or access denied")
-	}
-	return nil
+	return initializers.DB.Transaction(func(tx *gorm.DB) error {
+		var transaction models.Transaction
+		if err := tx.Where("id = ? AND user_id = ?", id, userId).First(&transaction).Error; err != nil {
+			return errors.New("transaction not found or access denied")
+		}
+		if err := adjustWalletBalance(tx, transaction.WalletID, userId, -transactionBalanceImpact(transaction)); err != nil {
+			return err
+		}
+		return tx.Delete(&transaction).Error
+	})
 }
 
 // Delete Old Transactions

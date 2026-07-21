@@ -51,13 +51,50 @@ func UpdateBudget(budget *models.Budget) error {
 func GetBudgets(userID uint) ([]models.Budget, error) {
 	var budgets []models.Budget
 	err := initializers.DB.Preload("Category").Preload("Wallet").Where("user_id = ?", userID).Find(&budgets).Error
+	if err != nil {
+		return nil, err
+	}
+	for i := range budgets {
+		if err := attachBudgetSpending(&budgets[i]); err != nil {
+			return nil, err
+		}
+	}
 	return budgets, err
 }
 
 func GetBudgetByID(id string, userID uint) (*models.Budget, error) {
 	var budget models.Budget
 	err := initializers.DB.Preload("Category").Preload("Wallet").Where("id = ? AND user_id = ?", id, userID).First(&budget).Error
+	if err != nil {
+		return &budget, err
+	}
+	err = attachBudgetSpending(&budget)
 	return &budget, err
+}
+
+func attachBudgetSpending(budget *models.Budget) error {
+	var spent float64
+	query := initializers.DB.Model(&models.Transaction{}).
+		Where("user_id = ? AND category_id = ? AND UPPER(type) = ? AND date >= ? AND date < ?",
+			budget.UserID,
+			budget.CategoryID,
+			"EXPENSE",
+			budget.StartDate,
+			budget.EndDate.AddDate(0, 0, 1),
+		)
+	if budget.WalletID != nil {
+		query = query.Where("wallet_id = ?", *budget.WalletID)
+	}
+	if err := query.Select("COALESCE(SUM(amount), 0)").Scan(&spent).Error; err != nil {
+		return err
+	}
+
+	budget.SpentAmount = spent
+	budget.RemainingAmount = budget.Amount - spent
+	if budget.Amount > 0 {
+		budget.Progress = (spent / budget.Amount) * 100
+	}
+	return nil
 }
 
 func DeleteBudget(id string, userID uint) error {

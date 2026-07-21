@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/axios";
+import { walletService } from "@/services/walletService";
 
 export interface Wallet {
     ID: number;
@@ -11,9 +11,6 @@ export interface Wallet {
 export const useWallets = () => {
     return useQuery({
         queryKey: ["wallets"],
-        queryFn: async () => {
-            const { data } = await api.get<{ data: Wallet[] }>("/wallets");
-            return data.data;
-        },
+        queryFn: walletService.getWallets,
     });
 };

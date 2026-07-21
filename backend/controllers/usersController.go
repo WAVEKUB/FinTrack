@@ -75,7 +75,6 @@ func (uc *UsersController) UpdateUser(c *gin.Context) {
 	// get request body
 	var body struct {
 		Email    string
-		Password string
 		Name     string
 		Avatar   string
 	}
@@ -85,21 +84,23 @@ func (uc *UsersController) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	// update user via service
-	_, err := uc.UserService.UpdateUser(body.Email, body.Password, body.Name, body.Avatar)
+	user, _ := c.Get("user")
+	userModel := user.(models.User)
+
+	updatedUser, err := uc.UserService.UpdateProfile(userModel.ID, body.Email, body.Name, body.Avatar)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// return success
-	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully"})
+	c.JSON(http.StatusOK, gin.H{"data": dto.ToUserDTO(*updatedUser)})
 }
 
-func (uc *UsersController) DeleteUser(c *gin.Context) {
-	// get request body
+func (uc *UsersController) ChangePassword(c *gin.Context) {
 	var body struct {
-		Email string
+		CurrentPassword string `json:"current_password"`
+		NewPassword     string `json:"new_password"`
 	}
 
 	if c.Bind(&body) != nil {
@@ -107,9 +108,22 @@ func (uc *UsersController) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	// delete user via service
-	err := uc.UserService.DeleteUser(body.Email)
-	if err != nil {
+	user, _ := c.Get("user")
+	userModel := user.(models.User)
+
+	if err := uc.UserService.ChangePassword(userModel.ID, body.CurrentPassword, body.NewPassword); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+}
+
+func (uc *UsersController) DeleteUser(c *gin.Context) {
+	user, _ := c.Get("user")
+	userModel := user.(models.User)
+
+	if err := uc.UserService.DeleteAccount(userModel.ID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
 		return
 	}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
     CreditCard,
@@ -19,6 +19,11 @@ const sidebarItems = [
         icon: LayoutDashboard,
     },
     {
+        title: "Wallets",
+        href: "/wallets",
+        icon: Wallet,
+    },
+    {
         title: "Transactions",
         href: "/transactions",
         icon: CreditCard,
@@ -26,7 +31,7 @@ const sidebarItems = [
     {
         title: "Budgets & Goals",
         href: "/budgets",
-        icon: Wallet,
+        icon: Target,
     },
     {
         title: "Settings",
@@ -37,7 +42,6 @@ const sidebarItems = [
 
 export function Sidebar() {
     const pathname = usePathname();
-    const router = useRouter();
     const { mutate: logout } = useLogout();
 
     return (

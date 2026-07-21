@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Budget, BudgetInput } from "@/services/budgetService";
 import { useCategories } from "@/hooks/useCategories";
+import { useWallets } from "@/hooks/useWallets";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -18,6 +19,7 @@ interface BudgetFormProps {
 
 export function BudgetForm({ initialData, onSubmit, onCancel }: BudgetFormProps) {
     const { data: categories = [], isLoading: isLoadingCategories } = useCategories();
+    const { data: wallets = [], isLoading: isLoadingWallets } = useWallets();
     const [isLoading, setIsLoading] = useState(false);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
@@ -33,6 +35,7 @@ export function BudgetForm({ initialData, onSubmit, onCancel }: BudgetFormProps)
             new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0]
     );
     const [categoryId, setCategoryId] = useState<number | "">(initialData?.category_id || "");
+    const [walletId, setWalletId] = useState<number | "">(initialData?.wallet_id || "");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -51,6 +54,7 @@ export function BudgetForm({ initialData, onSubmit, onCancel }: BudgetFormProps)
                 start_date: new Date(startDate).toISOString(),
                 end_date: new Date(endDate).toISOString(),
                 category_id: Number(categoryId),
+                wallet_id: walletId ? Number(walletId) : null,
             });
             toast.success(initialData ? "Budget updated successfully" : "Budget created successfully");
         } catch (error) {
@@ -152,6 +156,23 @@ export function BudgetForm({ initialData, onSubmit, onCancel }: BudgetFormProps)
                         <Plus className="w-5 h-5" />
                     </button>
                 </div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium mb-1 dark:text-gray-200">Wallet Scope</label>
+                <select
+                    value={walletId}
+                    onChange={(e) => setWalletId(e.target.value ? Number(e.target.value) : "")}
+                    className="w-full rounded-lg border border-gray-300 p-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
+                    disabled={isLoadingWallets}
+                >
+                    <option value="">All Wallets</option>
+                    {wallets.map((wallet) => (
+                        <option key={wallet.ID} value={wallet.ID}>
+                            {wallet.name} ({wallet.type})
+                        </option>
+                    ))}
+                </select>
             </div>
 
             <Modal

@@ -21,6 +21,12 @@ export function BudgetList({ budgets, onEdit, onDelete }: BudgetListProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {budgets.map((budget) => (
+                (() => {
+                    const progress = Math.min(budget.progress || 0, 100);
+                    const spent = budget.spent || 0;
+                    const remaining = budget.remaining ?? budget.amount - spent;
+
+                    return (
                 <div
                     key={budget.ID}
                     className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-sm ring-1 ring-gray-200 dark:ring-zinc-800"
@@ -69,16 +75,26 @@ export function BudgetList({ budgets, onEdit, onDelete }: BudgetListProps) {
                                     ${budget.amount.toLocaleString()}
                                 </span>
                             </div>
-                            {/* 
-                                Since we don't have 'current spent', we just show the limit. 
-                                In a real app we would want a progress bar here. 
-                                For now, just a full bar to indicate 'Active' 
-                            */}
                             <div className="h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-blue-500 rounded-full"
-                                    style={{ width: '100%' }}
+                                    className={`h-full rounded-full ${budget.progress > 100 ? "bg-red-500" : "bg-blue-500"}`}
+                                    style={{ width: `${progress}%` }}
                                 />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <span className="block text-gray-500 dark:text-gray-400">Spent</span>
+                                <span className="font-medium text-gray-900 dark:text-white">
+                                    ${spent.toLocaleString()}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="block text-gray-500 dark:text-gray-400">Remaining</span>
+                                <span className={`font-medium ${remaining < 0 ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white"}`}>
+                                    ${remaining.toLocaleString()}
+                                </span>
                             </div>
                         </div>
 
@@ -88,6 +104,8 @@ export function BudgetList({ budgets, onEdit, onDelete }: BudgetListProps) {
                         </div>
                     </div>
                 </div>
+                    );
+                })()
             ))}
         </div>
     );
